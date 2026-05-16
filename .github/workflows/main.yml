@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 파일 구조 확인
-        run: 
+        run: |
           pwd
           ls -R
 
@@ -33,4 +33,4 @@ jobs:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
-          main.py
+          python main.py
