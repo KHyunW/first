@@ -14,15 +14,11 @@ jobs:
       - name: 코드 가져오기
         uses: actions/checkout@v4
 
-      - name: 파일 구조 확인
-        run: |
-          pwd
-          ls -R
-
-      - name: Python 설치
+      - name: Python 설정 및 캐시 적용
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip' # 핵심: 이전에 설치한 라이브러리를 캐싱하여 시간 단축
 
       - name: 라이브러리 설치
         run: |
