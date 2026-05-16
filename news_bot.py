@@ -5,51 +5,104 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from html import escape
 
+# =========================
+# 환경변수 로드
+# =========================
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
-def get_news():
+# =========================
+# RSS 목록
+# =========================
+RSS_FEEDS = {
+    "한국경제": "https://www.hankyung.com/feed/economy",
+    "매일경제": "https://www.mk.co.kr/rss/30100041/",
+    "연합뉴스": "https://www.yna.co.kr/rss/economy.xml"
+}
 
-    url = (
-        "https://news.google.com/rss/search"
-        "?q=경제&hl=ko&gl=KR&ceid=KR:ko"
-    )
+# =========================
+# RSS 뉴스 가져오기
+# =========================
+def fetch_news(rss_url, limit=10):
 
     headers = {
-        "User-Agent": "Mozilla/5.0"
+        "User-Agent": (
+            "Mozilla/5.0 "
+            "(Windows NT 10.0; Win64; x64)"
+        )
     }
 
-    response = requests.get(
-        url,
-        headers=headers,
-        timeout=10
-    )
+    try:
+
+        response = requests.get(
+            rss_url,
+            headers=headers,
+            timeout=10
+        )
+
+        response.raise_for_status()
+
+    except requests.RequestException as e:
+        return [f"뉴스 요청 실패: {e}"]
 
     soup = BeautifulSoup(response.content, "xml")
 
-    items = soup.find_all("item", limit=5)
+    items = soup.find_all("item", limit=limit)
 
     news_list = []
 
     for idx, item in enumerate(items, start=1):
 
-        title = item.title.text.strip()
-        link = item.link.text.strip()
+        try:
 
-        news_text = (
-            f"{idx}. 📰 {escape(title)}\n"
-            f"🔗 {link}\n"
-        )
+            title = item.title.text.strip()
+            link = item.link.text.strip()
 
-        news_list.append(news_text)
+            news_text = (
+                f"{idx}. 📰 {escape(title)}\n"
+                f"🔗 {link}"
+            )
 
-    return "\n".join(news_list)
+            news_list.append(news_text)
 
+        except Exception:
+            continue
+
+    if not news_list:
+        return ["뉴스 데이터 없음"]
+
+    return news_list
+
+# =========================
+# 전체 뉴스 메시지 생성
+# =========================
+def make_news_message():
+
+    final_message = "<b>📊 오늘의 경제 뉴스 브리핑</b>\n\n"
+
+    for company, rss_url in RSS_FEEDS.items():
+
+        final_message += f"<b>🗞 {company}</b>\n\n"
+
+        news_items = fetch_news(rss_url, limit=10)
+
+        final_message += "\n\n".join(news_items)
+
+        final_message += "\n\n"
+
+    return final_message
+
+# =========================
+# 텔레그램 메시지 전송
+# =========================
 def send_telegram_message(text):
 
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    telegram_url = (
+        f"https://api.telegram.org/bot"
+        f"{BOT_TOKEN}/sendMessage"
+    )
 
     payload = {
         "chat_id": CHAT_ID,
@@ -58,23 +111,26 @@ def send_telegram_message(text):
         "disable_web_page_preview": True
     }
 
-    response = requests.post(
-        url,
-        data=payload,
-        timeout=10
-    )
+    try:
 
-    if response.status_code == 200:
-        print("전송 성공")
-    else:
-        print("전송 실패")
-        print(response.text)
+        response = requests.post(
+            telegram_url,
+            data=payload,
+            timeout=10
+        )
 
+        response.raise_for_status()
+
+        print("텔레그램 전송 성공")
+
+    except requests.RequestException as e:
+        print("텔레그램 전송 실패:", e)
+
+# =========================
+# 메인 실행
+# =========================
 if __name__ == "__main__":
 
-    message = (
-        "<b>📊 오늘의 경제 뉴스</b>\n\n"
-        + get_news()
-    )
+    message = make_news_message()
 
     send_telegram_message(message)
