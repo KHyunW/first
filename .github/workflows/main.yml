@@ -1,7 +1,6 @@
 name: Stock News Bot
 
 on:
-
   workflow_dispatch:
 
 jobs:
