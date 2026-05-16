@@ -14,7 +14,7 @@ def get_economic_news():
     soup = BeautifulSoup(response.content, 'xml')
     
     # 최신 뉴스 5개만 가져오기
-    items = soup.find_all('item', limit=5)
+    items = soup.find_all('item', limit=10)
     
     news_list = []
     for item in items:
