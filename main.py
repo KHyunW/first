@@ -112,7 +112,7 @@ async def main():
 
 if __name__ == "__main__":
     # 비동기 이벤트 루프 실행
-    asyncio.run(main())import os
+    asyncio.run(main())
 import requests
 
 from bs4 import BeautifulSoup
