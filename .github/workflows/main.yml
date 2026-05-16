@@ -14,6 +14,11 @@ jobs:
       - name: 코드 가져오기
         uses: actions/checkout@v4
 
+      - name: 파일 구조 확인
+        run: 
+          pwd
+          ls -R
+
       - name: Python 설치
         uses: actions/setup-python@v5
         with:
